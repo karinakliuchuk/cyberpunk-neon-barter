@@ -1,4 +1,4 @@
-Ключук Каріна - Координатор репозиторію
-Штепа Артем - Автор зміни
-Поляков Ян - Reviewer
-Лясковець Анастасія - Відповідальний за CI
+Kliuchuk Karina - Repository Coordinator;
+Shtepa Artem - Change Author;
+Poliakov Yan - Reviewer;
+Liaskovets Anastasia - CI Lead;
