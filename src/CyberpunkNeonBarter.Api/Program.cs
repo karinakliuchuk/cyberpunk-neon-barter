@@ -54,4 +54,7 @@ app.MapCycleEndpoints();
 
 app.MapDealEndpoints();
 
+app.MapOfferEndpoints();
+
+
 app.Run();
