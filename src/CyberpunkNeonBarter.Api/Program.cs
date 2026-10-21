@@ -1,12 +1,33 @@
+using CyberpunkNeonBarter.Api.Endpoints;
+using CyberpunkNeonBarter.Infrastructure.Data;
+using CyberpunkNeonBarter.Infrastructure.Services.CycleSearch;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+// PostgreSQL + EF Core
+var connectionString = builder.Configuration.GetConnectionString("Barter")
+    ?? throw new InvalidOperationException(
+        "Не задано рядок підключення ConnectionStrings:Barter у appsettings.json");
+
+builder.Services.AddDbContext<BarterDbContext>(options =>
+    options.UseNpgsql(connectionString, npgsql =>
+    {
+        npgsql.MigrationsAssembly(typeof(BarterDbContext).Assembly.FullName);
+        npgsql.EnableRetryOnFailure(maxRetryCount: 3);
+    }));
+
+// OpenAPI
 builder.Services.AddOpenApi();
+
+// Сервіси пошуку циклів обміну
+builder.Services.AddScoped<GraphBuilder>();
+builder.Services.AddScoped<CycleFinderService>();
+builder.Services.AddScoped<CycleToDealService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// OpenAPI у режимі розробки
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -14,28 +35,17 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
+// Перевірка стану API та підключення до БД
+app.MapGet("/health", async (BarterDbContext db) =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    var canConnect = await db.Database.CanConnectAsync();
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+    return canConnect
+        ? Results.Ok(new { status = "healthy", database = "postgres" })
+        : Results.Problem("Database unavailable");
+});
+
+// Ендпоїнти пошуку циклів обміну
+app.MapCycleEndpoints();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
