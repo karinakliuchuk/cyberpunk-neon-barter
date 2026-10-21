@@ -10,7 +10,7 @@ public static class OfferEndpoints
 {
     public static IEndpointRouteBuilder MapOfferEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/offers").WithTags("Offers");
+        var group = app.MapGroup("/api/offers").WithTags("Offers").RequireAuthorization();
 
         // 1. Створити оголошення (UC-01)
         group.MapPost("/", async (
