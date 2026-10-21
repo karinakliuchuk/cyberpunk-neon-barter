@@ -31,6 +31,10 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/openapi/v1.json", "Cyberpunk Neon Barter API v1");
+    });
 }
 
 app.UseHttpsRedirection();
@@ -47,5 +51,7 @@ app.MapGet("/health", async (BarterDbContext db) =>
 
 // Ендпоїнти пошуку циклів обміну
 app.MapCycleEndpoints();
+
+app.MapDealEndpoints();
 
 app.Run();
