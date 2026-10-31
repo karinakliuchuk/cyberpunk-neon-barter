@@ -5,9 +5,6 @@ using CyberpunkNeonBarter.Infrastructure.Data;
 
 namespace CyberpunkNeonBarter.Infrastructure.Services.CycleSearch;
 
-/// <summary>
-/// Перетворює знайдений цикл на BarterDeal + 3 BarterParticipant + AuditLog.
-/// </summary>
 public sealed class CycleToDealService(BarterDbContext db)
 {
     public async Task<BarterDeal> CreateDealAsync(FoundCycle cycle, CancellationToken ct = default)
@@ -56,7 +53,6 @@ public sealed class CycleToDealService(BarterDbContext db)
 
         db.BarterDeals.Add(deal);
 
-        // Резервуємо всі три Give-оголошення (OfferStatus.Matched у моделі)
         var giveIds = new[] { cycle.GiveOfferA, cycle.GiveOfferB, cycle.GiveOfferC };
         var giveOffers = await db.Offers
             .Where(o => giveIds.Contains(o.Id))
@@ -65,7 +61,6 @@ public sealed class CycleToDealService(BarterDbContext db)
         foreach (var offer in giveOffers)
             offer.Status = OfferStatus.Matched;
 
-        // Аудит
         db.AuditLogs.Add(new AuditLog
         {
             Id = Guid.NewGuid(),

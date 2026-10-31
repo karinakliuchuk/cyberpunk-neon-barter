@@ -5,16 +5,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CyberpunkNeonBarter.Infrastructure.Services.CycleSearch;
 
-/// <summary>
-/// Будує граф відповідностей "хто кому може віддати".
-/// Вузли — UserId. Ребра — (GiveOffer, NeedOffer) з однаковою категорією та кількістю.
-/// </summary>
+// Будує граф відповідностей "хто кому може віддати".
 public sealed class GraphBuilder(BarterDbContext db)
 {
-    /// <summary>
-    /// Завантажує активні оголошення з БД і будує граф.
-    /// Один SQL-запит, решта — у пам'яті. Для 1000 оголошень — мілісекунди.
-    /// </summary>
+    // Завантажує активні оголошення з БД і будує граф.
     public async Task<Graph> BuildAsync(CancellationToken ct = default)
     {
         var activeOffers = await db.Offers
@@ -60,7 +54,6 @@ public sealed class GraphBuilder(BarterDbContext db)
     }
 }
 
-/// <summary>Результат побудови графа.</summary>
 public sealed class Graph
 {
     public IReadOnlyDictionary<Guid, List<Edge>> Adjacency { get; }

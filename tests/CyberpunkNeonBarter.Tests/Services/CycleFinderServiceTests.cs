@@ -49,7 +49,6 @@ public sealed class CycleFinderServiceTests
             Offer.Create(c, OfferType.Need, ResourceCategory.Water, 10));
         await db.SaveChangesAsync();
 
-        // === ДІАГНОСТИКА ===
         var allOffers = await db.Offers.AsNoTracking().ToListAsync();
         _output.WriteLine($"Всього offers: {allOffers.Count}");
         foreach (var o in allOffers)

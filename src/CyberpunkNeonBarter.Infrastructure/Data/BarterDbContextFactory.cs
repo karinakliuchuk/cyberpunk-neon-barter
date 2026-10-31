@@ -3,10 +3,6 @@ using Microsoft.EntityFrameworkCore.Design;
 
 namespace CyberpunkNeonBarter.Infrastructure.Data;
 
-/// <summary>
-/// Використовується ЛИШЕ інструментом `dotnet ef` під час створення міграцій.
-/// Реальний запуск — через Program.cs, де береться connection string із конфігурації.
-/// </summary>
 public sealed class BarterDbContextFactory : IDesignTimeDbContextFactory<BarterDbContext>
 {
     public BarterDbContext CreateDbContext(string[] args)

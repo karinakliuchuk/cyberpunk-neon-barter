@@ -4,10 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CyberpunkNeonBarter.Infrastructure.Services.CycleSearch;
 
-/// <summary>
-/// Знаходить замкнений цикл A→B→C→A з трьох різних користувачів (FR-06, AC-06).
-/// Повертає null, якщо жодного валідного циклу немає (A2, A3, A5 за специфікацією UC-02).
-/// </summary>
+// Знаходить замкнений цикл A→B→C→A з трьох різних користувачів (FR-06, AC-06).
 public sealed class CycleFinderService(GraphBuilder graphBuilder, BarterDbContext db)
 {
     public async Task<FoundCycle?> FindAsync(CancellationToken ct = default)
@@ -25,7 +22,6 @@ public sealed class CycleFinderService(GraphBuilder graphBuilder, BarterDbContex
         if (valid.Count == 0) return null;
 
         // 4. Детермінований вибір (A4, NFR-03, AC-11):
-        //    сортуємо за (minUserId, midUserId, maxUserId)
         var chosen = valid
             .OrderBy(c => new[] { c.A, c.B, c.C }.Min())
             .ThenBy(c => new[] { c.A, c.B, c.C }.OrderBy(x => x).ElementAt(1))
@@ -40,8 +36,6 @@ public sealed class CycleFinderService(GraphBuilder graphBuilder, BarterDbContex
             chosen.GiveA.Id, chosen.GiveB.Id, chosen.GiveC.Id,
             chosen.NeedA.Id, chosen.NeedB.Id, chosen.NeedC.Id);
     }
-
-    // --- Внутрішнє ---
 
     private static List<CycleCandidate> EnumerateTriangles(Graph graph)
     {
@@ -69,7 +63,6 @@ public sealed class CycleFinderService(GraphBuilder graphBuilder, BarterDbContex
                     var canonical = CanonicalizeKeys(a, b, c);
                     if (!seen.Add(canonical)) continue;
 
-                    // Правильно: Need_A = потреба самого A, Need_B = потреба B, Need_C = потреба C
                     result.Add(new CycleCandidate(
                         a, b, c,
                         edgeAB.GiveOffer, graph.NeedsByUser[a],
