@@ -41,7 +41,7 @@ public static class DealEndpoints
             // Перевірка, чи всі підтвердили
             if (deal.Participants.All(p => p.TransferConfirmed))
             {
-                // УВАГА: Якщо тут буде помилка компіляції, заміни InProgress на той статус, який є у файлі DealStatus.cs (можливо, Confirmed)
+                
                 deal.Status = DealStatus.InProgress; 
                 
                 // Оновлюємо статуси оголошень на "Matched" (знайдено пару)
