@@ -5,6 +5,9 @@ namespace CyberpunkNeonBarter.Domain.Entities;
 /// <summary>Оголошення обміну «віддаю» або «потребую» (UC-01, FR-02…FR-05).</summary>
 public class Offer
 {
+    /// <summary>Максимальна довжина необов'язкового текстового опису.</summary>
+    public const int MaxDescriptionLength = 500;
+
     public Guid Id { get; set; }
 
     /// <summary>Автор оголошення. Обов'язковий зв'язок: кожне оголошення має одного автора.</summary>
@@ -18,6 +21,9 @@ public class Offer
     /// <summary>Кількість у стандартних цілих одиницях («пакетах»), більша за нуль (FR-04).</summary>
     public int Quantity { get; set; }
 
+    /// <summary>Необов'язковий короткий опис оголошення (додано в спринті S1). Може бути null.</summary>
+    public string? Description { get; set; }
+
     public OfferStatus Status { get; set; } = OfferStatus.Active;
 
     public DateTime CreatedAtUtc { get; set; }
@@ -25,9 +31,10 @@ public class Offer
     /// <summary>
     /// Створює коректне оголошення зі статусом «Активне».
     /// Предметні правила з SRS: категорія зі списку (FR-03), кількість ціла і &gt; 0 (FR-04),
-    /// автор вказаний (FR-05).
+    /// автор вказаний (FR-05). Опис необов'язковий і не довший за <see cref="MaxDescriptionLength"/> символів.
     /// </summary>
-    public static Offer Create(Guid userId, OfferType type, ResourceCategory category, int quantity)
+    public static Offer Create(Guid userId, OfferType type, ResourceCategory category, int quantity,
+        string? description = null)
     {
         if (userId == Guid.Empty)
             throw new ArgumentException("Потрібно вказати автора оголошення.", nameof(userId));
@@ -41,6 +48,13 @@ public class Offer
         if (quantity <= 0)
             throw new ArgumentOutOfRangeException(nameof(quantity), "Кількість має бути цілим числом більшим за нуль.");
 
+        // Порожній або пробільний опис вважаємо відсутнім
+        var normalizedDescription = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+
+        if (normalizedDescription is { Length: > MaxDescriptionLength })
+            throw new ArgumentOutOfRangeException(nameof(description),
+                $"Опис не може бути довшим за {MaxDescriptionLength} символів.");
+
         return new Offer
         {
             Id = Guid.NewGuid(),
@@ -48,6 +62,7 @@ public class Offer
             Type = type,
             Category = category,
             Quantity = quantity,
+            Description = normalizedDescription,
             Status = OfferStatus.Active,
             CreatedAtUtc = DateTime.UtcNow
         };
