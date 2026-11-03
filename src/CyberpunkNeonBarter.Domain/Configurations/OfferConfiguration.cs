@@ -15,6 +15,9 @@ public class OfferConfiguration : IEntityTypeConfiguration<Offer>
         builder.Property(o => o.Status).HasConversion<string>().HasMaxLength(20);
         builder.Property(o => o.Quantity).IsRequired();
 
+        // Необов'язковий опис (NULL дозволено), довжина збігається з Offer.MaxDescriptionLength
+        builder.Property(o => o.Description).HasMaxLength(Offer.MaxDescriptionLength);
+
         // User 1 → 0..* Offer
         builder.HasOne(o => o.User)
                .WithMany(u => u.Offers)
