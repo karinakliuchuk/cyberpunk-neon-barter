@@ -24,4 +24,9 @@ public class OfferRepository(BarterDbContext db) : IOfferRepository
         db.Offers.Update(offer);
         await db.SaveChangesAsync(ct);
     }
+
+    public async Task<IEnumerable<Offer>> GetAllAsync(CancellationToken ct = default)
+    {
+        return await db.Offers.ToListAsync(ct);
+    }
 }

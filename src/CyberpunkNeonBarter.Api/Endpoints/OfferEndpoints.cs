@@ -39,7 +39,30 @@ public static class OfferEndpoints
         .WithName("CreateOffer")
         .WithOpenApi();
 
-        // 2. Отримати оголошення за ID
+        // 2. Отримати ВСІ оголошення (для веб-інтерфейсу)
+        group.MapGet("/", async (
+            IOfferRepository repo,
+            CancellationToken ct) =>
+        {
+            var offers = await repo.GetAllAsync(ct);
+
+            var response = offers.Select(offer => new OfferResponse
+            {
+                Id = offer.Id,
+                UserId = offer.UserId,
+                Type = offer.Type.ToString(),
+                Category = offer.Category.ToString(),
+                Quantity = offer.Quantity,
+                Status = offer.Status.ToString(),
+                CreatedAt = offer.CreatedAtUtc
+            });
+
+            return Results.Ok(response);
+        })
+        .WithName("GetAllOffers")
+        .WithOpenApi();
+
+        // 3. Отримати оголошення за ID
         group.MapGet("/{id:guid}", async (
             Guid id,
             IOfferRepository repo,
@@ -65,7 +88,7 @@ public static class OfferEndpoints
         .WithName("GetOfferById")
         .WithOpenApi();
 
-        // 3. Деактивувати оголошення
+        // 4. Деактивувати оголошення
         group.MapDelete("/{id:guid}", async (
             Guid id,
             IOfferRepository repo,
