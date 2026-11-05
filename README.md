@@ -12,28 +12,32 @@
 
 ## Технологічний стек
 
-| Компонент               | Технологія / Інструмент |
-| :---------------------- | :---------------------- |
-| **Платформа / Мова**    | .NET 8 / C#             |
-| **Тип застосунку**      | ASP.NET Core Web API    |
-| **Модульне тестування** | xUnit                   |
-| **Автоматизація (CI)**  | GitHub Actions          |
-| **Контроль версій**     | Git / GitHub            |
+| Компонент | Технологія / Інструмент |
+|---|---|
+| **Платформа / Мова** | .NET 9 / C# |
+| **Тип застосунку** | ASP.NET Core Web API (Minimal API) |
+| **База даних** | PostgreSQL (Docker) |
+| **ORM** | Entity Framework Core |
+| **Модульне тестування** | xUnit |
+| **Автоматизація (CI)** | GitHub Actions |
+| **Контроль версій** | Git / GitHub |
 
 ---
 
 ## Склад команди (Група ТР-41)
 
-| Учасник                 | GitHub / Role             | Зона відповідальності                           |
-| :---------------------- | :------------------------ | :---------------------------------------------- |
-| **Каріна Ключук**       | `@karinakliuchuk`         | Координатор проєкту, налаштування CI пайплайнів |
-| **Артем Штепа**         | `@shtepaartem021`         | Розробка модульних тестів (xUnit)               |
-| **Ян Поляков**          | `@poliakov-yan-iate`      | Конфігурація Web API та Swagger/OpenAPI         |
-| **Анастасія Лясковець** | `@liaskovetsanastasia-ui` | Документація проєкту та супровід README         |
+| Учасник | GitHub / Role | Зона відповідальності |
+|---|---|---|
+| **Каріна Ключук** | `@karinakliuchuk` | Координатор проєкту, API Layer, CI пайплайни |
+| **Артем Штепа** | `@shtepaartem021` | Архітектура, БД, алгоритми пошуку циклів |
+| **Ян Поляков** | `@poliakov-yan-iate` | Domain Layer, бізнес-сутності та конфігурації |
+| **Анастасія Лясковець** | `@liaskovetsanastasia-ui` | Документація проєкту (QA) |
 
 ---
 
 ## Інструкція з локального запуску
+
+Для запуску проєкту вам знадобиться **Docker Desktop** та **.NET 9 SDK**.
 
 ### 1. Клонувати репозиторій
 
@@ -42,28 +46,44 @@ git clone https://github.com/karinakliuchuk/cyberpunk-neon-barter.git
 cd cyberpunk-neon-barter
 ```
 
-### 2. Відновити залежності
+### 2. Запустити базу даних PostgreSQL
+
+У корені проєкту є налаштований `docker-compose.yaml`. Запустіть базу даних однією командою:
 
 ```bash
-dotnet restore
+docker compose up -d
 ```
 
-### 3. Зібрати проєкт
+*Це підніме контейнер `cyberpunk-db` на порту 5432 та створить volume для збереження даних.*
+
+### 3. Застосувати міграції (створити таблиці)
+
+Щоб створити необхідну структуру таблиць у базі даних, виконайте:
 
 ```bash
-dotnet build --no-restore
+dotnet ef database update --project src/CyberpunkNeonBarter.Infrastructure --startup-project src/CyberpunkNeonBarter.Api
 ```
 
-### 4. Запустити модульні тести
-
-```bash
-dotnet test tests/CyberpunkNeonBarter.Tests/CyberpunkNeonBarter.Tests.csproj
-```
-
-### 5. Запустити Web API
+### 4. Запустити Web API
 
 ```bash
 dotnet run --project src/CyberpunkNeonBarter.Api
+```
+
+Після успішного запуску сервер буде доступний за адресою `http://localhost:5254`.
+
+### 5. Відкрити Swagger для тестування
+
+Перейдіть у браузері за посиланням:
+
+[http://localhost:5254/swagger](http://localhost:5254/swagger)
+
+*Для тестування захищених ендпоінтів спочатку викличте `POST /api/auth/login`, отримайте JWT-токен та натисніть кнопку `Authorize`.*
+
+### 6. Запустити модульні тести (опціонально)
+
+```bash
+dotnet test tests/CyberpunkNeonBarter.Tests/CyberpunkNeonBarter.Tests.csproj
 ```
 
 ---
@@ -74,7 +94,6 @@ dotnet run --project src/CyberpunkNeonBarter.Api
 
 Пайплайн запускається при кожному `push` або `pull_request` у гілку `main` та виконує такі кроки:
 
-1. Перевіряє та відновлює залежності .NET 8.
+1. Перевіряє та відновлює залежності .NET 9.
 2. Виконує автоматичне збирання проєкту (`dotnet build`).
 3. Запускає повний набір модульних тестів (`dotnet test`).
- f0bcaa502bfd9b2fa01af1c9eba44b32fdf05da7
