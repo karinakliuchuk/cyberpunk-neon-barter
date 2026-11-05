@@ -7,5 +7,6 @@ public enum ResourceCategory
     Food = 1,
     Medicine = 2,
     Communication = 3,
-    Energy = 4
+    Energy = 4,
+    Other = 99 
 }

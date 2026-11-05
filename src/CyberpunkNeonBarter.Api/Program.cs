@@ -98,10 +98,14 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+// --- ДОДАНО ДЛЯ ВІДОБРАЖЕННЯ HTML-СТОРІНКИ ---
+app.UseDefaultFiles(); // Шукає index.html у папці wwwroot
+app.UseStaticFiles();  // Дозволяє віддавати статичні файли (html, css, js)
+// ----------------------------------------------
+
 app.UseHttpsRedirection();
 
 // --- ПІДКЛЮЧЕННЯ MIDDLEWARE АВТОРИЗАЦІЇ ---
-// Важливо: ці рядки мають бути перед мапінгом ендпоінтів
 app.UseAuthentication();
 app.UseAuthorization();
 // ------------------------------------------
@@ -117,9 +121,9 @@ app.MapGet("/health", async (BarterDbContext db) =>
 });
 
 // Мапінг всіх ендпоінтів
-app.MapAuthEndpoints();    // Новий ендпоінт для логіну
-app.MapCycleEndpoints();   // Ендпоінти Артема
-app.MapDealEndpoints();    // Твої ендпоінти для угод
-app.MapOfferEndpoints();   // Твої ендпоінти для оголошень
+app.MapAuthEndpoints();    
+app.MapCycleEndpoints();   
+app.MapDealEndpoints();    
+app.MapOfferEndpoints();   
 
 app.Run();
