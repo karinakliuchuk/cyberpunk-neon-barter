@@ -1,8 +1,7 @@
 using CyberpunkNeonBarter.Api.DTOs;
 using CyberpunkNeonBarter.Domain.Entities;
 using CyberpunkNeonBarter.Domain.Enums;
-using CyberpunkNeonBarter.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
+using CyberpunkNeonBarter.Infrastructure.Repositories;
 
 namespace CyberpunkNeonBarter.Api.Endpoints;
 
@@ -14,19 +13,16 @@ public static class OfferEndpoints
 
         // 1. Створити оголошення (UC-01)
         group.MapPost("/", async (
-            CreateOfferRequest request, 
-            BarterDbContext db, 
+            CreateOfferRequest request,
+            IOfferRepository repo,
             CancellationToken ct) =>
         {
-            var userExists = await db.Users.AnyAsync(u => u.Id == request.UserId, ct);
+            var userExists = await repo.UserExistsAsync(request.UserId, ct);
             if (!userExists)
                 return Results.BadRequest(new { message = "Користувача з таким ID не існує" });
 
-            // Використовуємо метод Create, який написав Ян
             var offer = Offer.Create(request.UserId, request.Type, request.Category, request.Quantity);
-
-            db.Offers.Add(offer);
-            await db.SaveChangesAsync(ct);
+            await repo.AddAsync(offer, ct);
 
             var response = new OfferResponse
             {
@@ -38,7 +34,6 @@ public static class OfferEndpoints
                 Status = offer.Status.ToString(),
                 CreatedAt = offer.CreatedAtUtc
             };
-
             return Results.Created($"/api/offers/{offer.Id}", response);
         })
         .WithName("CreateOffer")
@@ -46,12 +41,12 @@ public static class OfferEndpoints
 
         // 2. Отримати оголошення за ID
         group.MapGet("/{id:guid}", async (
-            Guid id, 
-            BarterDbContext db, 
+            Guid id,
+            IOfferRepository repo,
             CancellationToken ct) =>
         {
-            var offer = await db.Offers.FindAsync(new object[] { id }, ct);
-            
+            var offer = await repo.GetByIdAsync(id, ct);
+
             if (offer is null)
                 return Results.NotFound(new { message = "Оголошення не знайдено" });
 
@@ -65,7 +60,6 @@ public static class OfferEndpoints
                 Status = offer.Status.ToString(),
                 CreatedAt = offer.CreatedAtUtc
             };
-
             return Results.Ok(response);
         })
         .WithName("GetOfferById")
@@ -73,17 +67,17 @@ public static class OfferEndpoints
 
         // 3. Деактивувати оголошення
         group.MapDelete("/{id:guid}", async (
-            Guid id, 
-            BarterDbContext db, 
+            Guid id,
+            IOfferRepository repo,
             CancellationToken ct) =>
         {
-            var offer = await db.Offers.FindAsync(new object[] { id }, ct);
-            
+            var offer = await repo.GetByIdAsync(id, ct);
+
             if (offer is null)
                 return Results.NotFound(new { message = "Оголошення не знайдено" });
 
             offer.Status = OfferStatus.Cancelled;
-            await db.SaveChangesAsync(ct);
+            await repo.UpdateAsync(offer, ct);
 
             return Results.Ok(new { message = "Оголошення деактивовано", status = offer.Status.ToString() });
         })
