@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: cyberpunk-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: cA7zyV1sI5wkQ3d
+      POSTGRES_DB: CyberpunkNeonBarter
+    ports:
+      - "5432:5432"
+    volumes:
+      - cyberpunk_data:/var/lib/postgresql
+    restart: unless-stopped
+
+volumes:
+  cyberpunk_data:
+    external: true
+    name: 2aed08af42993a884ad541506ff199725242078915c3f5d9e59f8b554faad479
