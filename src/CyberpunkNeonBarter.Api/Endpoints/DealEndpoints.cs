@@ -1,5 +1,6 @@
 using CyberpunkNeonBarter.Domain.Enums;
 using CyberpunkNeonBarter.Infrastructure.Data;
+using CyberpunkNeonBarter.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace CyberpunkNeonBarter.Api.Endpoints;
@@ -10,12 +11,12 @@ public static class DealEndpoints
     {
         // 1. Підтвердження участі в угоді (UC-03)
         app.MapPost("/api/deals/{dealId}/confirm", async (
-            Guid dealId, 
-            Guid userId, // В реальності береться з JWT-токена
-            BarterDbContext db, 
+            Guid dealId,
+            Guid userId,
+            BarterDbContext db,
+            IOfferRepository offerRepo,
             CancellationToken ct) =>
         {
-            // Завантажуємо угоду разом з учасниками та їхніми оголошеннями "віддаю"
             var deal = await db.BarterDeals
                 .Include(d => d.Participants)
                 .ThenInclude(p => p.GiveOffer)
@@ -24,7 +25,6 @@ public static class DealEndpoints
             if (deal is null)
                 return Results.NotFound(new { message = "Угоду не знайдено" });
 
-            // Ян використовує статус Proposed замість PendingConfirmations
             if (deal.Status != DealStatus.Proposed)
                 return Results.Conflict(new { message = "Угода вже не очікує підтвердження" });
 
@@ -35,27 +35,26 @@ public static class DealEndpoints
             if (participant.TransferConfirmed)
                 return Results.Ok(new { message = "Ви вже підтвердили участь" });
 
-            // Фіксація згоди
             participant.TransferConfirmed = true;
 
-            // Перевірка, чи всі підтвердили
             if (deal.Participants.All(p => p.TransferConfirmed))
             {
-                
-                deal.Status = DealStatus.InProgress; 
-                
-                // Оновлюємо статуси оголошень на "Matched" (знайдено пару)
+                deal.Status = DealStatus.InProgress;
+
                 foreach (var p in deal.Participants)
                 {
-                    if (p.GiveOffer != null) p.GiveOffer.Status = OfferStatus.Matched;
+                    if (p.GiveOffer != null)
+                    {
+                        p.GiveOffer.Status = OfferStatus.Matched;
+                        await offerRepo.UpdateAsync(p.GiveOffer, ct);
+                    }
                 }
             }
-
             await db.SaveChangesAsync(ct);
 
-            return Results.Ok(new 
-            { 
-                dealId = deal.Id, 
+            return Results.Ok(new
+            {
+                dealId = deal.Id,
                 status = deal.Status.ToString(),
                 message = deal.Status == DealStatus.InProgress ? "Всі підтвердили! Угода активна." : "Згоду зафіксовано. Очікуємо інших."
             });
@@ -68,6 +67,7 @@ public static class DealEndpoints
             Guid dealId,
             Guid userId,
             BarterDbContext db,
+            IOfferRepository offerRepo,
             CancellationToken ct) =>
         {
             var deal = await db.BarterDeals
@@ -76,22 +76,22 @@ public static class DealEndpoints
                 .FirstOrDefaultAsync(d => d.Id == dealId, ct);
 
             if (deal is null) return Results.NotFound();
-
             var participant = deal.Participants.FirstOrDefault(p => p.UserId == userId);
             if (participant is null) return Results.Forbid();
 
             if (deal.Status == DealStatus.Completed || deal.Status == DealStatus.Cancelled)
                 return Results.Conflict(new { message = "Угода вже завершена або скасована" });
 
-            // Скасовуємо угоду
             deal.Status = DealStatus.Cancelled;
 
-            // Повертаємо оголошення в статус Active
             foreach (var p in deal.Participants)
             {
-                if (p.GiveOffer != null) p.GiveOffer.Status = OfferStatus.Active;
+                if (p.GiveOffer != null)
+                {
+                    p.GiveOffer.Status = OfferStatus.Active;
+                    await offerRepo.UpdateAsync(p.GiveOffer, ct);
+                }
             }
-
             await db.SaveChangesAsync(ct);
 
             return Results.Ok(new { dealId = deal.Id, status = deal.Status.ToString() });
