@@ -141,6 +141,9 @@ namespace CyberpunkNeonBarter.Infrastructure.Data.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
 
