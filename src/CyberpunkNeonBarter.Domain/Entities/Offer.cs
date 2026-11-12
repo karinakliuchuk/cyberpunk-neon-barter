@@ -24,6 +24,12 @@ public class Offer
     /// <summary>Необов'язковий короткий опис оголошення (додано в спринті S1). Може бути null.</summary>
     public string? Description { get; set; }
 
+    /// <summary>
+    /// Необов'язковий термін придатності оголошення (додано в спринті S2). Null — безстрокове.
+    /// Допустимість значення перевіряє <c>OfferRule.IsValid</c>.
+    /// </summary>
+    public DateTime? ExpiresAt { get; set; }
+
     public OfferStatus Status { get; set; } = OfferStatus.Active;
 
     public DateTime CreatedAtUtc { get; set; }
@@ -32,9 +38,11 @@ public class Offer
     /// Створює коректне оголошення зі статусом «Активне».
     /// Предметні правила з SRS: категорія зі списку (FR-03), кількість ціла і &gt; 0 (FR-04),
     /// автор вказаний (FR-05). Опис необов'язковий і не довший за <see cref="MaxDescriptionLength"/> символів.
+    /// Термін придатності <paramref name="expiresAt"/> необов'язковий; його допустимість
+    /// перевіряє прикладна служба через <c>OfferRule</c>.
     /// </summary>
     public static Offer Create(Guid userId, OfferType type, ResourceCategory category, int quantity,
-        string? description = null)
+        string? description = null, DateTime? expiresAt = null)
     {
         if (userId == Guid.Empty)
             throw new ArgumentException("Потрібно вказати автора оголошення.", nameof(userId));
@@ -63,6 +71,7 @@ public class Offer
             Category = category,
             Quantity = quantity,
             Description = normalizedDescription,
+            ExpiresAt = expiresAt,
             Status = OfferStatus.Active,
             CreatedAtUtc = DateTime.UtcNow
         };
