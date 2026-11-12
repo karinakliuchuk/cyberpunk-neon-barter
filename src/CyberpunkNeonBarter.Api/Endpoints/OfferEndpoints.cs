@@ -1,7 +1,7 @@
 using CyberpunkNeonBarter.Api.DTOs;
-using CyberpunkNeonBarter.Domain.Entities;
 using CyberpunkNeonBarter.Domain.Enums;
 using CyberpunkNeonBarter.Infrastructure.Repositories;
+using CyberpunkNeonBarter.Infrastructure.Services;
 
 namespace CyberpunkNeonBarter.Api.Endpoints;
 
@@ -11,18 +11,23 @@ public static class OfferEndpoints
     {
         var group = app.MapGroup("/api/offers").WithTags("Offers").RequireAuthorization();
 
-        // 1. Створити оголошення (UC-01)
+        // 1. Створити оголошення (UC-01) - Переведено на OfferService
         group.MapPost("/", async (
             CreateOfferRequest request,
-            IOfferRepository repo,
+            OfferService offerService,
             CancellationToken ct) =>
         {
-            var userExists = await repo.UserExistsAsync(request.UserId, ct);
-            if (!userExists)
-                return Results.BadRequest(new { message = "Користувача з таким ID не існує" });
+            var offer = await offerService.CreateOfferAsync(
+                request.UserId,
+                request.Type,
+                request.Category,
+                request.Quantity,
+                null,
+                null,
+                ct);
 
-            var offer = Offer.Create(request.UserId, request.Type, request.Category, request.Quantity);
-            await repo.AddAsync(offer, ct);
+            if (offer is null)
+                return Results.BadRequest(new { message = "Користувача з таким ID не існує" });
 
             var response = new OfferResponse
             {

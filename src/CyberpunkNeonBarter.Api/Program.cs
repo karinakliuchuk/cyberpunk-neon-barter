@@ -2,6 +2,7 @@ using CyberpunkNeonBarter.Api.Endpoints;
 using CyberpunkNeonBarter.Infrastructure.Data;
 using CyberpunkNeonBarter.Infrastructure.Repositories;
 using CyberpunkNeonBarter.Infrastructure.Services.CycleSearch;
+using CyberpunkNeonBarter.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -83,8 +84,9 @@ builder.Services.AddScoped<GraphBuilder>();
 builder.Services.AddScoped<CycleFinderService>();
 builder.Services.AddScoped<CycleToDealService>();
 
-// Реєстрація репозиторію
+// Реєстрація репозиторію та прикладної служби
 builder.Services.AddScoped<IOfferRepository, OfferRepository>();
+builder.Services.AddScoped<OfferService>();
 
 var app = builder.Build();
 
