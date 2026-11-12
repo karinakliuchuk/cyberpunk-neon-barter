@@ -19,7 +19,7 @@ builder.Services.AddDbContext<BarterDbContext>(options =>
     options.UseNpgsql(connectionString, npgsql =>
     {
         npgsql.MigrationsAssembly(typeof(BarterDbContext).Assembly.FullName);
-        npgsql.EnableRetryOnFailure(maxRetryCount: 3);
+        // npgsql.EnableRetryOnFailure(maxRetryCount: 3); // ЗАКОМЕНТОВАНО, бо конфліктує з транзакціями
     }));
 
 // OpenAPI
@@ -27,7 +27,6 @@ builder.Services.AddOpenApi(options =>
 {
     options.AddDocumentTransformer((document, context, cancellationToken) =>
     {
-        // 1. Описуємо схему безпеки
         document.Components ??= new Microsoft.OpenApi.Models.OpenApiComponents();
         document.Components.SecuritySchemes.Add("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
         {
@@ -38,7 +37,6 @@ builder.Services.AddOpenApi(options =>
             Description = "Введіть ваш JWT токен"
         });
 
-        // 2. Вказуємо Swagger, що він має застосовувати цю схему до запитів
         document.SecurityRequirements.Add(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
         {
             {
@@ -101,8 +99,8 @@ if (app.Environment.IsDevelopment())
 }
 
 // --- ДОДАНО ДЛЯ ВІДОБРАЖЕННЯ HTML-СТОРІНКИ ---
-app.UseDefaultFiles(); // Шукає index.html у папці wwwroot
-app.UseStaticFiles();  // Дозволяє віддавати статичні файли (html, css, js)
+app.UseDefaultFiles();
+app.UseStaticFiles();
 // ----------------------------------------------
 
 app.UseHttpsRedirection();
