@@ -11,40 +11,51 @@ public static class OfferEndpoints
     {
         var group = app.MapGroup("/api/offers").WithTags("Offers").RequireAuthorization();
 
-        // 1. Створити оголошення (UC-01) - Переведено на OfferService
+        // 1. Створити оголошення (UC-01)
         group.MapPost("/", async (
             CreateOfferRequest request,
             OfferService offerService,
             CancellationToken ct) =>
         {
-            var offer = await offerService.CreateOfferAsync(
-                request.UserId,
-                request.Type,
-                request.Category,
-                request.Quantity,
-                null,
-                null,
-                ct);
-
-            if (offer is null)
-                return Results.BadRequest(new { message = "Користувача з таким ID не існує" });
-
-            var response = new OfferResponse
+            try
             {
-                Id = offer.Id,
-                UserId = offer.UserId,
-                Type = offer.Type.ToString(),
-                Category = offer.Category.ToString(),
-                Quantity = offer.Quantity,
-                Status = offer.Status.ToString(),
-                CreatedAt = offer.CreatedAtUtc
-            };
-            return Results.Created($"/api/offers/{offer.Id}", response);
+                // ТУТ ВИПРАВЛЕНО: передаємо дані з request
+                var offer = await offerService.CreateOfferAsync(
+                    request.UserId,
+                    request.Type,
+                    request.Category,
+                    request.Quantity,
+                    request.Description,
+                    request.ExpiresAt,
+                    ct);
+
+                if (offer is null)
+                    return Results.BadRequest(new { message = "Користувача з таким ID не існує" });
+
+                var response = new OfferResponse
+                {
+                    Id = offer.Id,
+                    UserId = offer.UserId,
+                    Type = offer.Type.ToString(),
+                    Category = offer.Category.ToString(),
+                    Quantity = offer.Quantity,
+                    Description = offer.Description, // ДОДАНО
+                    ExpiresAt = offer.ExpiresAt,     // ДОДАНО
+                    Status = offer.Status.ToString(),
+                    CreatedAt = offer.CreatedAtUtc
+                };
+                return Results.Created($"/api/offers/{offer.Id}", response);
+            }
+            catch (ArgumentException ex)
+            {
+                // Ловимо помилку бізнес-правила (наприклад, минула дата)
+                return Results.BadRequest(new { message = ex.Message });
+            }
         })
         .WithName("CreateOffer")
         .WithOpenApi();
 
-        // 2. Отримати ВСІ оголошення (для веб-інтерфейсу)
+        // 2. Отримати ВСІ оголошення
         group.MapGet("/", async (
             IOfferRepository repo,
             CancellationToken ct) =>
@@ -58,6 +69,8 @@ public static class OfferEndpoints
                 Type = offer.Type.ToString(),
                 Category = offer.Category.ToString(),
                 Quantity = offer.Quantity,
+                Description = offer.Description, // ДОДАНО
+                ExpiresAt = offer.ExpiresAt,     // ДОДАНО
                 Status = offer.Status.ToString(),
                 CreatedAt = offer.CreatedAtUtc
             });
@@ -67,7 +80,7 @@ public static class OfferEndpoints
         .WithName("GetAllOffers")
         .WithOpenApi();
 
-        // 3. Отримати оголошення за ID
+        // 3. Отримати за ID
         group.MapGet("/{id:guid}", async (
             Guid id,
             IOfferRepository repo,
@@ -85,6 +98,8 @@ public static class OfferEndpoints
                 Type = offer.Type.ToString(),
                 Category = offer.Category.ToString(),
                 Quantity = offer.Quantity,
+                Description = offer.Description, // ДОДАНО
+                ExpiresAt = offer.ExpiresAt,     // ДОДАНО
                 Status = offer.Status.ToString(),
                 CreatedAt = offer.CreatedAtUtc
             };
@@ -93,7 +108,7 @@ public static class OfferEndpoints
         .WithName("GetOfferById")
         .WithOpenApi();
 
-        // 4. Деактивувати оголошення
+        // 4. Деактивувати
         group.MapDelete("/{id:guid}", async (
             Guid id,
             IOfferRepository repo,

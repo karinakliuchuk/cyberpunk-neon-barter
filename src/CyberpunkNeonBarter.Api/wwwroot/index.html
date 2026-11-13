@@ -37,6 +37,15 @@
         tr:hover { background: #222; }
         
         pre { background: #000; padding: 10px; border: 1px solid #333; overflow-x: auto; font-size: 12px; color: #fff; text-align: left; }
+
+        /* --- ФІКС ДЛЯ ПОЛЯ ДАТИ --- */
+        input[type="datetime-local"] {
+            color-scheme: dark; /* Робить календар темним */
+        }
+        input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+            filter: invert(1); /* Робить іконку календаря білою */
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -96,6 +105,9 @@
             <label>Опис:</label>
             <input type="text" id="description" value="Свіжий ресурс" />
 
+            <label>Термін дії (ExpiresAt):</label>
+            <input type="date" id="expiresAt" />
+
             <button onclick="createOffer()">Створити</button>
             <pre id="result" class="hidden">Результат...</pre>
             
@@ -117,7 +129,6 @@
         let authToken = null;
         const TEST_USER_ID = "3fa85f64-5717-4562-b3fc-2c963f66afa6";
 
-        // Функція для перемикання екранів
         function showPanel(panelId) {
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
             document.getElementById(panelId).classList.add('active');
@@ -156,12 +167,20 @@
             resultBox.classList.remove('hidden');
             resultBox.innerText = "Відправка...";
 
+            const dateInput = document.getElementById('expiresAt').value;
+            // Перевіряємо, чи є дата, і конвертуємо її
+            let expiresAtIso = null;
+            if (dateInput) {
+                expiresAtIso = new Date(dateInput).toISOString();
+            }
+
             const data = {
                 userId: TEST_USER_ID,
                 type: parseInt(document.getElementById('type').value),
                 category: parseInt(document.getElementById('category').value),
                 quantity: parseInt(document.getElementById('quantity').value),
-                description: document.getElementById('description').value
+                description: document.getElementById('description').value,
+                expiresAt: expiresAtIso
             };
 
             try {
@@ -178,6 +197,10 @@
                     const result = await response.json();
                     resultBox.innerText = JSON.stringify(result, null, 2);
                     resultBox.style.color = "#00ffcc";
+                } else if (response.status === 400) {
+                    const text = await response.text();
+                    resultBox.innerText = `Помилка 400 (Бізнес-правило): ${text}`;
+                    resultBox.style.color = "#ff0000";
                 } else {
                     const text = await response.text();
                     resultBox.innerText = `Помилка ${response.status}: ${text}`;
@@ -208,20 +231,21 @@
                     return;
                 }
 
-                // СОРТУВАННЯ: найновіші зверху
                 offers.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
                 let html = "<table>";
-                html += "<tr><th>Дата</th><th>Тип</th><th>Категорія</th><th>К-сть</th><th>Статус</th></tr>";
+                html += "<tr><th>Дата створ.</th><th>Тип</th><th>Категорія</th><th>К-сть</th><th>Термін дії</th><th>Статус</th></tr>";
                 
                 offers.forEach(o => {
-                    // Форматуємо дату для краси
                     const date = new Date(o.createdAt).toLocaleString('uk-UA', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+                    const expDate = o.expiresAt ? new Date(o.expiresAt).toLocaleString('uk-UA', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-';
+
                     html += `<tr>
                         <td>${date}</td>
                         <td>${o.type}</td>
                         <td>${o.category}</td>
                         <td>${o.quantity}</td>
+                        <td>${expDate}</td>
                         <td style="color: ${o.status === 'Active' ? '#00ffcc' : '#ff0000'}">${o.status}</td>
                     </tr>`;
                 });
