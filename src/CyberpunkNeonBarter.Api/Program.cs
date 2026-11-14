@@ -19,7 +19,7 @@ builder.Services.AddDbContext<BarterDbContext>(options =>
     options.UseNpgsql(connectionString, npgsql =>
     {
         npgsql.MigrationsAssembly(typeof(BarterDbContext).Assembly.FullName);
-        // npgsql.EnableRetryOnFailure(maxRetryCount: 3); // ЗАКОМЕНТОВАНО, бо конфліктує з транзакціями
+        // npgsql.EnableRetryOnFailure(maxRetryCount: 3);
     }));
 
 // OpenAPI
@@ -56,7 +56,7 @@ builder.Services.AddOpenApi(options =>
     });
 });
 
-// --- НАЛАШТУВАННЯ JWT АВТОРИЗАЦІЇ ---
+//Налаштування JWT авторизації
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["Secret"] ?? throw new InvalidOperationException("JWT Secret is missing in appsettings.json");
 
@@ -98,14 +98,14 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// --- ДОДАНО ДЛЯ ВІДОБРАЖЕННЯ HTML-СТОРІНКИ ---
+// Для відображення HTML-сторінки
 app.UseDefaultFiles();
 app.UseStaticFiles();
 // ----------------------------------------------
 
 app.UseHttpsRedirection();
 
-// --- ПІДКЛЮЧЕННЯ MIDDLEWARE АВТОРИЗАЦІЇ ---
+// Підключення Middleware авторизації
 app.UseAuthentication();
 app.UseAuthorization();
 // ------------------------------------------

@@ -19,7 +19,7 @@ public static class OfferEndpoints
         {
             try
             {
-                // ТУТ ВИПРАВЛЕНО: передаємо дані з request
+                //Передаємо дані з request
                 var offer = await offerService.CreateOfferAsync(
                     request.UserId,
                     request.Type,
@@ -39,8 +39,8 @@ public static class OfferEndpoints
                     Type = offer.Type.ToString(),
                     Category = offer.Category.ToString(),
                     Quantity = offer.Quantity,
-                    Description = offer.Description, // ДОДАНО
-                    ExpiresAt = offer.ExpiresAt,     // ДОДАНО
+                    Description = offer.Description,
+                    ExpiresAt = offer.ExpiresAt,
                     Status = offer.Status.ToString(),
                     CreatedAt = offer.CreatedAtUtc
                 };
@@ -69,8 +69,8 @@ public static class OfferEndpoints
                 Type = offer.Type.ToString(),
                 Category = offer.Category.ToString(),
                 Quantity = offer.Quantity,
-                Description = offer.Description, // ДОДАНО
-                ExpiresAt = offer.ExpiresAt,     // ДОДАНО
+                Description = offer.Description,
+                ExpiresAt = offer.ExpiresAt,
                 Status = offer.Status.ToString(),
                 CreatedAt = offer.CreatedAtUtc
             });
@@ -98,8 +98,8 @@ public static class OfferEndpoints
                 Type = offer.Type.ToString(),
                 Category = offer.Category.ToString(),
                 Quantity = offer.Quantity,
-                Description = offer.Description, // ДОДАНО
-                ExpiresAt = offer.ExpiresAt,     // ДОДАНО
+                Description = offer.Description,
+                ExpiresAt = offer.ExpiresAt,
                 Status = offer.Status.ToString(),
                 CreatedAt = offer.CreatedAtUtc
             };
