@@ -127,3 +127,5 @@ app.MapDealEndpoints();
 app.MapOfferEndpoints();   
 
 app.Run();
+
+public partial class Program { }
