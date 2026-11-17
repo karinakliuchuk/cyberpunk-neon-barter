@@ -39,10 +39,10 @@
         pre { background: #000; padding: 10px; border: 1px solid #333; overflow-x: auto; font-size: 12px; color: #fff; text-align: left; }
 
         /* --- ФІКС ДЛЯ ПОЛЯ ДАТИ --- */
-        input[type="datetime-local"] {
+        input[type="date"] {
             color-scheme: dark; 
         }
-        input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+        input[type="date"]::-webkit-calendar-picker-indicator {
             filter: invert(1); 
             cursor: pointer;
         }
@@ -117,6 +117,19 @@
         <!-- Екран 4: Список оголошень -->
         <div class="panel" id="listPanel">
             <h3>Всі оголошення в базі</h3>
+            
+            <!-- НОВИЙ ФІЛЬТР -->
+            <label style="color: #00ffcc; font-weight: bold;">Фільтр за категорією:</label>
+            <select id="filterCategory" onchange="loadOffers()">
+                <option value="-1">Всі категорії</option>
+                <option value="0">Вода (Water)</option>
+                <option value="1">Їжа (Food)</option>
+                <option value="2">Ліки (Medicine)</option>
+                <option value="3">Зв'язок (Communication)</option>
+                <option value="4">Енергія (Energy)</option>
+                <option value="99">Інше (Other)</option>
+            </select>
+
             <div id="offersList">
                 <p>Завантаження...</p>
             </div>
@@ -136,7 +149,6 @@
             document.getElementById(panelId).classList.add('active');
         }
 
-        // 1. Використовуємо Фасад для логіну
         async function login() {
             try {
                 await apiClient.login(TEST_USER_ID, 'Participant');
@@ -148,12 +160,11 @@
         }
 
         function logout() {
-            apiClient.token = null; // Очищаємо токен у фасаді
+            apiClient.token = null;
             document.getElementById('statusMessage').innerText = "Статус: Не авторизовано";
             showPanel('welcomePanel');
         }
 
-        // 2. Використовуємо Фасад для створення
         async function createOffer() {
             if (!apiClient.token) return alert('Спочатку увійдіть!');
 
@@ -192,7 +203,6 @@
             }
         }
 
-        // 3. Використовуємо Фасад для завантаження
         async function loadOffers() {
             if (!apiClient.token) return;
             const listContainer = document.getElementById('offersList');
@@ -200,9 +210,15 @@
 
             try {
                 let offers = await apiClient.getOffers();
+
+                // ЛОГІКА ФІЛЬТРАЦІЇ
+                const selectedCategory = parseInt(document.getElementById('filterCategory').value);
+                if (selectedCategory !== -1) {
+                    offers = offers.filter(o => o.category === getCategoryName(selectedCategory));
+                }
                 
                 if (offers.length === 0) {
-                    listContainer.innerHTML = "<p>Оголошень поки немає.</p>";
+                    listContainer.innerHTML = "<p>Оголошень поки немає (або не знайдено за фільтром).</p>";
                     return;
                 }
 
@@ -230,6 +246,12 @@
             } catch (e) {
                 listContainer.innerHTML = `<p style="color: #ff0000;">Помилка: ${e.message}</p>`;
             }
+        }
+
+        // Допоміжна функція для перетворення ID категорії в її назву (як вона приходить з бекенду)
+        function getCategoryName(id) {
+            const categories = {0: 'Water', 1: 'Food', 2: 'Medicine', 3: 'Communication', 4: 'Energy', 99: 'Other'};
+            return categories[id] || '';
         }
     </script>
 </body>
