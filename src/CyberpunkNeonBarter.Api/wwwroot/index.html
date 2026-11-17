@@ -39,11 +39,11 @@
         pre { background: #000; padding: 10px; border: 1px solid #333; overflow-x: auto; font-size: 12px; color: #fff; text-align: left; }
 
         /* --- ФІКС ДЛЯ ПОЛЯ ДАТИ --- */
-        input[type="datetime-local"] {
-            color-scheme: dark; /* Робить календар темним */
+        input[type="date"] {
+            color-scheme: dark; 
         }
-        input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-            filter: invert(1); /* Робить іконку календаря білою */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1); 
             cursor: pointer;
         }
     </style>
@@ -53,7 +53,7 @@
     <div class="status" id="statusMessage">Статус: Не авторизовано</div>
 
     <div class="container">
-        <!-- Екран 0: Вітання (початковий) -->
+        <!-- Екран 0: Вітання -->
         <div class="panel active" id="welcomePanel">
             <h2>Ласкаво просимо до системи обміну</h2>
             <div class="btn-group">
@@ -117,6 +117,19 @@
         <!-- Екран 4: Список оголошень -->
         <div class="panel" id="listPanel">
             <h3>Всі оголошення в базі</h3>
+            
+            <!-- НОВИЙ ФІЛЬТР -->
+            <label style="color: #00ffcc; font-weight: bold;">Фільтр за категорією:</label>
+            <select id="filterCategory" onchange="loadOffers()">
+                <option value="-1">Всі категорії</option>
+                <option value="0">Вода (Water)</option>
+                <option value="1">Їжа (Food)</option>
+                <option value="2">Ліки (Medicine)</option>
+                <option value="3">Зв'язок (Communication)</option>
+                <option value="4">Енергія (Energy)</option>
+                <option value="99">Інше (Other)</option>
+            </select>
+
             <div id="offersList">
                 <p>Завантаження...</p>
             </div>
@@ -125,8 +138,10 @@
         </div>
     </div>
 
+    <!-- ПІДКЛЮЧЕННЯ ФАСАДУ -->
+    <script src="js/api-client.js"></script>
+
     <script>
-        let authToken = null;
         const TEST_USER_ID = "3fa85f64-5717-4562-b3fc-2c963f66afa6";
 
         function showPanel(panelId) {
@@ -136,17 +151,7 @@
 
         async function login() {
             try {
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: TEST_USER_ID, role: 'Participant' })
-                });
-                
-                if (!response.ok) throw new Error('Помилка сервера');
-                
-                const data = await response.json();
-                authToken = data.token;
-                
+                await apiClient.login(TEST_USER_ID, 'Participant');
                 document.getElementById('statusMessage').innerText = "Статус: Авторизовано (Participant)";
                 showPanel('mainMenuPanel');
             } catch (e) {
@@ -155,24 +160,20 @@
         }
 
         function logout() {
-            authToken = null;
+            apiClient.token = null;
             document.getElementById('statusMessage').innerText = "Статус: Не авторизовано";
             showPanel('welcomePanel');
         }
 
         async function createOffer() {
-            if (!authToken) return alert('Спочатку увійдіть!');
+            if (!apiClient.token) return alert('Спочатку увійдіть!');
 
             const resultBox = document.getElementById('result');
             resultBox.classList.remove('hidden');
             resultBox.innerText = "Відправка...";
 
             const dateInput = document.getElementById('expiresAt').value;
-            // Перевіряємо, чи є дата, і конвертуємо її
-            let expiresAtIso = null;
-            if (dateInput) {
-                expiresAtIso = new Date(dateInput).toISOString();
-            }
+            const expiresAtIso = dateInput ? new Date(dateInput).toISOString() : null;
 
             const data = {
                 userId: TEST_USER_ID,
@@ -184,26 +185,16 @@
             };
 
             try {
-                const response = await fetch('/api/offers', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${authToken}`
-                    },
-                    body: JSON.stringify(data)
-                });
+                const response = await apiClient.createOffer(data);
                 
-                if (response.status === 201 || response.status === 200) {
-                    const result = await response.json();
-                    resultBox.innerText = JSON.stringify(result, null, 2);
+                if (response.ok) {
+                    resultBox.innerText = JSON.stringify(response.data, null, 2);
                     resultBox.style.color = "#00ffcc";
                 } else if (response.status === 400) {
-                    const text = await response.text();
-                    resultBox.innerText = `Помилка 400 (Бізнес-правило): ${text}`;
+                    resultBox.innerText = `Помилка 400 (Бізнес-правило): ${response.text}`;
                     resultBox.style.color = "#ff0000";
                 } else {
-                    const text = await response.text();
-                    resultBox.innerText = `Помилка ${response.status}: ${text}`;
+                    resultBox.innerText = `Помилка ${response.status}: ${response.text}`;
                     resultBox.style.color = "#ff0000";
                 }
             } catch (e) {
@@ -213,21 +204,21 @@
         }
 
         async function loadOffers() {
-            if (!authToken) return;
+            if (!apiClient.token) return;
             const listContainer = document.getElementById('offersList');
             listContainer.innerHTML = "<p>Завантаження...</p>";
 
             try {
-                const response = await fetch('/api/offers', {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-                
-                if (!response.ok) throw new Error('Помилка завантаження');
-                
-                let offers = await response.json();
+                let offers = await apiClient.getOffers();
+
+                // ЛОГІКА ФІЛЬТРАЦІЇ
+                const selectedCategory = parseInt(document.getElementById('filterCategory').value);
+                if (selectedCategory !== -1) {
+                    offers = offers.filter(o => o.category === getCategoryName(selectedCategory));
+                }
                 
                 if (offers.length === 0) {
-                    listContainer.innerHTML = "<p>Оголошень поки немає.</p>";
+                    listContainer.innerHTML = "<p>Оголошень поки немає (або не знайдено за фільтром).</p>";
                     return;
                 }
 
@@ -255,6 +246,12 @@
             } catch (e) {
                 listContainer.innerHTML = `<p style="color: #ff0000;">Помилка: ${e.message}</p>`;
             }
+        }
+
+        // Допоміжна функція для перетворення ID категорії в її назву (як вона приходить з бекенду)
+        function getCategoryName(id) {
+            const categories = {0: 'Water', 1: 'Food', 2: 'Medicine', 3: 'Communication', 4: 'Energy', 99: 'Other'};
+            return categories[id] || '';
         }
     </script>
 </body>
