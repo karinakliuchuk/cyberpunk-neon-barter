@@ -4,7 +4,7 @@
 
 | ID вимоги | Опис вимоги | Use Case | Критерій приймання (AC) | Проєктний артефакт (UML) | Фактична реалізація (Код) | Результат перевірки | Власник |
 |---|---|---|---|---|---|---|---|
-| **FR-01** | Створення оголошення про обмін ресурсу/послуги | UC-01 | AC-01 (Оголошення збережено зі статусом Active) | Class Diagram, Activity UC-01 | `OfferEndpoints.cs`, `OfferRepository.cs`, `OfferService.cs`, `OfferRule.cs` | Успішно (201 Created) | Каріна / Ян |
+| **FR-01** | Створення оголошення про обмін ресурсу/послуги | UC-01 | AC-01 (Оголошення збережено зі статусом Active) | Class Diagram, Activity UC-01 | `OfferEndpoints.cs`, `OfferRepository.cs`, `OfferService.cs`, `OfferRule.cs`, `wwwroot/js/api-client.js` (`BarterApiClient`) | Успішно (201 Created); характеризаційні тести `OfferEndpointsTests.cs` | Каріна / Ян |
 | **FR-02** | Автоматичний пошук циклічних ланцюжків обміну (A->B->C->A) | UC-02 | AC-02 (Сформовано BarterDeal) | Class Diagram, Activity UC-02, Sequence UC-02 | `CycleFinderService.cs`, `GraphBuilder.cs` | Успішно (200 OK) | Артем (Architect) |
 | **FR-03** | Підтвердження участі в угоді учасниками ланцюжка | UC-03 | AC-03 (При 100% згоді статус Active) | Use Case Diagram, Activity UC-03 | `DealEndpoints.cs`, `OfferRepository.cs` | Успішно (200 OK) | Каріна (Integrator) |
 | **FR-04** | Скасування угоди та розформування ланцюжка | UC-04 | AC-04 (Угода Cancelled, оголошення в Active) | State Machine Diagram, Activity UC-04 | `DealEndpoints.cs`, `OfferRepository.cs` | Успішно (200 OK) | Настя (QA) / Каріна |
@@ -16,7 +16,7 @@
 |---|---|---|---|---|---|
 | **NFR-01** | Продуктивність | Час пошуку циклів ≤ 2 сек | Бенчмарки (`CycleSearchBenchmark.cs`) | `CycleFinderService.cs` | Успішно (Benchmark) |
 | **NFR-02** | Надійність | Атомарність зміни стану угоди | Транзакційність у БД, перевірка контрольованої відмови | `OfferService.cs` (Транзакції), `BarterDbContext.cs` | Успішно (Відкат підтверджено) |
-| **NFR-03** | Безпека | Авторизація та аутентифікація | JWT Tokens, RBAC | `Program.cs`, `AuthEndpoints.cs` | Успішно (401/200) |
+| **NFR-03** | Безпека | Авторизація та аутентифікація | JWT Tokens, RBAC | `Program.cs`, `AuthEndpoints.cs` | Успішно (401/200); тест доступу без токена в `OfferEndpointsTests.cs` |
 
 ## 3. Зв'язок вимог з прецедентами
 
@@ -27,3 +27,10 @@
 | UC-03 | FR-03 | NFR-02, NFR-03 |
 | UC-04 | FR-04 | NFR-02, NFR-03 |
 | UC-05 | FR-05 | NFR-03 |
+
+## 4. Автоматизовані тести та клієнтський фасад (спринт S3, ЛР №7)
+
+| Артефакт | Призначення | Пов'язані вимоги | Файл |
+|---|---|---|---|
+| `OfferEndpointsTests` | Характеризаційні тести API оголошень: створення, читання за Id і списком, відмова при `quantity = 0`, відмова без токена, невідомий Id. Фіксують поведінку сервера до та після рефакторингу клієнта | FR-01, NFR-03 | `tests/CyberpunkNeonBarter.Tests/Integration/OfferEndpointsTests.cs` |
+| `BarterApiClient` | Клієнтський Фасад (шаблон Facade): єдине місце для всіх `fetch`-запитів до API, `index.html` викликає лише його методи | FR-01 (UC-01) та інші виклики API з клієнта | `src/CyberpunkNeonBarter.Api/wwwroot/js/api-client.js` |
