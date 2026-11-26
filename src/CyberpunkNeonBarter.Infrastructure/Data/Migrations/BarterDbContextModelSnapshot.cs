@@ -195,6 +195,9 @@ namespace CyberpunkNeonBarter.Infrastructure.Data.Migrations
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Callsign")
