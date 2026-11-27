@@ -34,3 +34,17 @@
 |---|---|---|---|
 | `OfferEndpointsTests` | Характеризаційні тести API оголошень: створення, читання за Id і списком, відмова при `quantity = 0`, відмова без токена, невідомий Id. Фіксують поведінку сервера до та після рефакторингу клієнта | FR-01, NFR-03 | `tests/CyberpunkNeonBarter.Tests/Integration/OfferEndpointsTests.cs` |
 | `BarterApiClient` | Клієнтський Фасад (шаблон Facade): єдине місце для всіх `fetch`-запитів до API, `index.html` викликає лише його методи | FR-01 (UC-01) та інші виклики API з клієнта | `src/CyberpunkNeonBarter.Api/wwwroot/js/api-client.js` |
+
+## Нові вимоги (ЛР №8)
+
+| ID | Вимога | Реалізація | Тест | Статус |
+|----|--------|-----------|------|--------|
+| FR-AUTH-01 | Реєстрація з хешуванням пароля | `Api/Endpoints/AuthEndpoints.cs` (`/register`), `Domain/Entities/User.cs` (`PasswordHash`) | Ручне тестування | Done |
+| FR-AUTH-02 | Логін і видача JWT-токена | `Api/Endpoints/AuthEndpoints.cs` (`/login`) | Ручне тестування | Done |
+| FR-AUTH-03 | `UserId` береться з JWT, а не з тіла запиту | `Api/Endpoints/AuthEndpoints.cs`, `Api/Endpoints/OfferEndpoints.cs` | Ручне тестування | Done |
+| FR-PROF-01 | Перегляд власних оголошень («Мій профіль») | `Api/Endpoints/OfferEndpoints.cs` (`GET /api/offers/my`), `wwwroot/index.html` | Ручне тестування | Done |
+| FR-CYC-01 | Пошук і підтвердження циклів із новою авторизацією | `Api/Endpoints/OfferEndpoints.cs`, `wwwroot/index.html`, `api-client.js` | Ручне тестування | Done |
+| FR-UI-01 | Розмежування ролей (гість / авторизований) | `wwwroot/index.html`, `api-client.js` | Ручне тестування | Done |
+| FR-UI-02 | Колонка «Опис» у таблиці оголошень | `wwwroot/index.html` | `Tests/Integration/OfferEndpointsTests.cs` (regression: `description` у відповіді API) | Done |
+| NFR-PROC-01 | Канбан-процес із WIP-лімітом | GitHub Projects, `docs/process/kanban.md` | — | Done |
+| NFR-QA-01 | Вимірювання покриття коду | `coverlet.collector`, `coverage.cobertura.xml` | CI (GitHub Actions) | Done |
