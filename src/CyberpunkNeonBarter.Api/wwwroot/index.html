@@ -7,45 +7,33 @@
         body { background-color: #0d0d0d; color: #00ffcc; font-family: 'Courier New', monospace; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; }
         h1 { text-align: center; text-shadow: 0 0 10px #00ffcc; margin-bottom: 5px; }
         .status { text-align: center; margin-bottom: 30px; color: #ff00ff; font-weight: bold; }
-        
         .container { width: 100%; max-width: 800px; display: flex; flex-direction: column; align-items: center; }
         
-        /* Панелі */
         .panel { display: none; background: #1a1a1a; border: 2px solid #ff00ff; padding: 30px; border-radius: 8px; box-shadow: 0 0 15px #ff00ff; width: 100%; box-sizing: border-box; text-align: center; }
         .panel.active { display: block; animation: fadeIn 0.3s ease-in-out; }
         .panel-left { text-align: left; }
-
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Кнопки */
         button { cursor: pointer; font-weight: bold; text-transform: uppercase; background: #00ffcc; color: #000; transition: 0.3s; border: none; padding: 15px 20px; margin: 10px 0; font-size: 16px; width: 100%; border-radius: 4px; }
         button:hover { background: #ff00ff; color: #fff; box-shadow: 0 0 10px #ff00ff; }
-        
         .btn-group { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
         .btn-back { background: #333; color: #00ffcc; margin-top: 20px; }
         .btn-back:hover { background: #555; box-shadow: none; }
-        .btn-small { width: auto; padding: 10px 20px; font-size: 14px; }
+        .btn-action { background: #ff00ff; color: #fff; }
 
-        /* Форми */
         input, select { width: 100%; padding: 12px; margin: 5px 0 15px 0; background: #000; color: #00ffcc; border: 1px solid #00ffcc; box-sizing: border-box; }
         label { display: block; text-align: left; margin-top: 10px; color: #ff00ff; }
 
-        /* Таблиця */
         table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 15px; text-align: left; }
         th, td { padding: 10px; border-bottom: 1px solid #333; }
         th { color: #ff00ff; font-weight: bold; }
         tr:hover { background: #222; }
-        
         pre { background: #000; padding: 10px; border: 1px solid #333; overflow-x: auto; font-size: 12px; color: #fff; text-align: left; }
-
-        /* --- ФІКС ДЛЯ ПОЛЯ ДАТИ --- */
-        input[type="date"] {
-            color-scheme: dark; 
-        }
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(1); 
-            cursor: pointer;
-        }
+        input[type="date"] { color-scheme: dark; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+        
+        /* Приховуємо елементи для гостей */
+        .auth-only { display: none; }
     </style>
 </head>
 <body>
@@ -61,11 +49,17 @@
             </div>
         </div>
 
-        <!-- Екран 1: Авторизація -->
+        <!-- Екран 1: Авторизація та Реєстрація -->
         <div class="panel" id="loginPanel">
-            <h3>Вхід</h3>
-            <p>Натисніть кнопку, щоб згенерувати JWT-токен та увійти.</p>
-            <button onclick="login()">Увійти як тестовий користувач</button>
+            <h3>Вхід / Реєстрація</h3>
+            <label>Логін (Username):</label>
+            <input type="text" id="authUsername" placeholder="Введіть логін" />
+            <label>Пароль:</label>
+            <input type="password" id="authPassword" placeholder="Введіть пароль" />
+            <div class="btn-group">
+                <button onclick="login()">Увійти</button>
+                <button onclick="register()" class="btn-action">Зареєструватися</button>
+            </div>
             <button class="btn-back" onclick="showPanel('welcomePanel')">← Назад</button>
         </div>
 
@@ -73,7 +67,11 @@
         <div class="panel" id="mainMenuPanel">
             <h3>Головне меню</h3>
             <div class="btn-group">
-                <button onclick="showPanel('createPanel')">Створити оголошення</button>
+                <!-- Кнопки створення та профілю доступні лише авторизованим -->
+                <button class="auth-only" onclick="showPanel('createPanel')">Створити оголошення</button>
+                <button class="auth-only" onclick="showPanel('myProfilePanel'); loadMyOffers();">Мій профіль (Мої оголошення)</button>
+                <button class="auth-only btn-action" onclick="findCycle()">Знайти цикл обміну</button>
+                
                 <button onclick="showPanel('listPanel'); loadOffers();">Переглянути всі оголошення</button>
                 <button class="btn-back" onclick="logout()">Вийти з акаунта</button>
             </div>
@@ -82,13 +80,11 @@
         <!-- Екран 3: Створення оголошення -->
         <div class="panel panel-left" id="createPanel">
             <h3 style="text-align: center;">Створити оголошення</h3>
-            
             <label>Тип:</label>
             <select id="type">
                 <option value="0">Give (Віддаю)</option>
                 <option value="1">Need (Потребую)</option>
             </select>
-            
             <label>Категорія:</label>
             <select id="category">
                 <option value="0">Вода (Water)</option>
@@ -98,27 +94,21 @@
                 <option value="4">Енергія (Energy)</option>
                 <option value="99">Інше (Other)</option>
             </select>
-
             <label>Кількість:</label>
             <input type="number" id="quantity" value="5" min="1" />
-
             <label>Опис:</label>
             <input type="text" id="description" value="Свіжий ресурс" />
-
             <label>Термін дії (ExpiresAt):</label>
             <input type="date" id="expiresAt" />
 
             <button onclick="createOffer()">Створити</button>
             <pre id="result" class="hidden">Результат...</pre>
-            
             <button class="btn-back" onclick="showPanel('mainMenuPanel')">← Назад до меню</button>
         </div>
 
-        <!-- Екран 4: Список оголошень -->
+        <!-- Екран 4: Список всіх оголошень -->
         <div class="panel" id="listPanel">
             <h3>Всі оголошення в базі</h3>
-            
-            <!-- НОВИЙ ФІЛЬТР -->
             <label style="color: #00ffcc; font-weight: bold;">Фільтр за категорією:</label>
             <select id="filterCategory" onchange="loadOffers()">
                 <option value="-1">Всі категорії</option>
@@ -129,45 +119,76 @@
                 <option value="4">Енергія (Energy)</option>
                 <option value="99">Інше (Other)</option>
             </select>
+            <div id="offersList"><p>Завантаження...</p></div>
+            <button class="btn-back" onclick="showPanel('mainMenuPanel')">← Назад до меню</button>
+        </div>
 
-            <div id="offersList">
-                <p>Завантаження...</p>
-            </div>
-            
+        <!-- Екран 5: Мій профіль -->
+        <div class="panel" id="myProfilePanel">
+            <h3>Мої оголошення</h3>
+            <div id="myOffersList"><p>Завантаження...</p></div>
             <button class="btn-back" onclick="showPanel('mainMenuPanel')">← Назад до меню</button>
         </div>
     </div>
 
-    <!-- ПІДКЛЮЧЕННЯ ФАСАДУ -->
-    <script src="js/api-client.js"></script>
-
+    <script src="js/api-client.js?v=5"></script>
     <script>
-        const TEST_USER_ID = "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+        function updateUIForAuth() {
+            const statusMsg = document.getElementById('statusMessage');
+            const authElements = document.querySelectorAll('.auth-only');
+            
+            if (apiClient.token) {
+                statusMsg.innerText = "Статус: Авторизовано";
+                authElements.forEach(el => el.style.display = 'block');
+                showPanel('mainMenuPanel');
+            } else {
+                statusMsg.innerText = "Статус: Не авторизовано";
+                authElements.forEach(el => el.style.display = 'none');
+                showPanel('welcomePanel');
+            }
+        }
+
+        // Перевіряємо стан при завантаженні сторінки
+        window.onload = updateUIForAuth;
 
         function showPanel(panelId) {
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
             document.getElementById(panelId).classList.add('active');
         }
 
-        async function login() {
+        async function register() {
+            const username = document.getElementById('authUsername').value;
+            const password = document.getElementById('authPassword').value;
+            if (!username || !password) return alert("Введіть логін та пароль!");
+
             try {
-                await apiClient.login(TEST_USER_ID, 'Participant');
-                document.getElementById('statusMessage').innerText = "Статус: Авторизовано (Participant)";
-                showPanel('mainMenuPanel');
+                await apiClient.register(username, password);
+                alert("Реєстрація успішна! Тепер увійдіть.");
+                await login();
+            } catch (e) {
+                alert("Помилка реєстрації: " + e.message);
+            }
+        }
+
+        async function login() {
+            const username = document.getElementById('authUsername').value;
+            const password = document.getElementById('authPassword').value;
+            if (!username || !password) return alert("Введіть логін та пароль!");
+
+            try {
+                await apiClient.login(username, password);
+                updateUIForAuth();
             } catch (e) {
                 alert("Помилка входу: " + e.message);
             }
         }
 
         function logout() {
-            apiClient.token = null;
-            document.getElementById('statusMessage').innerText = "Статус: Не авторизовано";
-            showPanel('welcomePanel');
+            apiClient.logout();
+            updateUIForAuth();
         }
 
         async function createOffer() {
-            if (!apiClient.token) return alert('Спочатку увійдіть!');
-
             const resultBox = document.getElementById('result');
             resultBox.classList.remove('hidden');
             resultBox.innerText = "Відправка...";
@@ -176,7 +197,6 @@
             const expiresAtIso = dateInput ? new Date(dateInput).toISOString() : null;
 
             const data = {
-                userId: TEST_USER_ID,
                 type: parseInt(document.getElementById('type').value),
                 category: parseInt(document.getElementById('category').value),
                 quantity: parseInt(document.getElementById('quantity').value),
@@ -186,19 +206,15 @@
 
             try {
                 const response = await apiClient.createOffer(data);
-                
                 if (response.ok) {
                     resultBox.innerText = JSON.stringify(response.data, null, 2);
                     resultBox.style.color = "#00ffcc";
-                } else if (response.status === 400) {
-                    resultBox.innerText = `Помилка 400 (Бізнес-правило): ${response.text}`;
-                    resultBox.style.color = "#ff0000";
                 } else {
                     resultBox.innerText = `Помилка ${response.status}: ${response.text}`;
                     resultBox.style.color = "#ff0000";
                 }
             } catch (e) {
-                resultBox.innerText = "Помилка з'єднання: " + e.message;
+                resultBox.innerText = "Помилка: " + e.message;
                 resultBox.style.color = "#ff0000";
             }
         }
@@ -210,45 +226,64 @@
 
             try {
                 let offers = await apiClient.getOffers();
-
-                // ЛОГІКА ФІЛЬТРАЦІЇ
                 const selectedCategory = parseInt(document.getElementById('filterCategory').value);
                 if (selectedCategory !== -1) {
                     offers = offers.filter(o => o.category === getCategoryName(selectedCategory));
                 }
                 
                 if (offers.length === 0) {
-                    listContainer.innerHTML = "<p>Оголошень поки немає (або не знайдено за фільтром).</p>";
+                    listContainer.innerHTML = "<p>Оголошень поки немає.</p>";
                     return;
                 }
-
                 offers.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
                 let html = "<table>";
-                html += "<tr><th>Дата створ.</th><th>Тип</th><th>Категорія</th><th>К-сть</th><th>Термін дії</th><th>Статус</th></tr>";
-                
+                html += "<tr><th>Дата</th><th>Тип</th><th>Категорія</th><th>К-сть</th><th>Опис</th><th>Термін дії</th><th>Статус</th></tr>";
                 offers.forEach(o => {
                     const date = new Date(o.createdAt).toLocaleString('uk-UA', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
                     const expDate = o.expiresAt ? new Date(o.expiresAt).toLocaleString('uk-UA', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-';
-
-                    html += `<tr>
-                        <td>${date}</td>
-                        <td>${o.type}</td>
-                        <td>${o.category}</td>
-                        <td>${o.quantity}</td>
-                        <td>${expDate}</td>
-                        <td style="color: ${o.status === 'Active' ? '#00ffcc' : '#ff0000'}">${o.status}</td>
-                    </tr>`;
+                    html += `<tr><td>${date}</td><td>${o.type}</td><td>${o.category}</td><td>${o.quantity}</td><td>${o.description || '-'}</td><td>${expDate}</td><td style="color: ${o.status === 'Active' ? '#00ffcc' : '#ff0000'}">${o.status}</td></tr>`;
                 });
                 html += "</table>";
-                
                 listContainer.innerHTML = html;
             } catch (e) {
                 listContainer.innerHTML = `<p style="color: #ff0000;">Помилка: ${e.message}</p>`;
             }
         }
 
-        // Допоміжна функція для перетворення ID категорії в її назву (як вона приходить з бекенду)
+        async function loadMyOffers() {
+            if (!apiClient.token) return;
+            const listContainer = document.getElementById('myOffersList');
+            listContainer.innerHTML = "<p>Завантаження...</p>";
+
+            try {
+                let offers = await apiClient.getMyOffers();
+                if (offers.length === 0) {
+                    listContainer.innerHTML = "<p>У вас ще немає оголошень.</p>";
+                    return;
+                }
+                
+                let html = "<table>";
+                html += "<tr><th>Тип</th><th>Категорія</th><th>К-сть</th><th>Опис</th><th>Статус</th></tr>";
+                offers.forEach(o => {
+                    html += `<tr><td>${o.type}</td><td>${o.category}</td><td>${o.quantity}</td><td>${o.description || '-'}</td><td style="color: ${o.status === 'Active' ? '#00ffcc' : '#ff0000'}">${o.status}</td></tr>`;
+                });
+                html += "</table>";
+                listContainer.innerHTML = html;
+            } catch (e) {
+                listContainer.innerHTML = `<p style="color: #ff0000;">Помилка: ${e.message}</p>`;
+            }
+        }
+
+        async function findCycle() {
+            try {
+                const result = await apiClient.findCycle();
+                alert("Успіх! Цикл знайдено та створено угоду.\nID угоди: " + result.dealId + "\nСтатус: " + result.status);
+            } catch (e) {
+                alert("Увага: " + e.message);
+            }
+        }
+
         function getCategoryName(id) {
             const categories = {0: 'Water', 1: 'Food', 2: 'Medicine', 3: 'Communication', 4: 'Energy', 99: 'Other'};
             return categories[id] || '';
