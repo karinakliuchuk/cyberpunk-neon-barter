@@ -1,0 +1,4 @@
+time,card,prev_state,new_state,assignee,evidence
+2026-11-21T10:00:00Z,Task 1 (Kanban Board),Todo,In Progress,Каріна,Створення проєкту в GitHub Projects
+2026-11-21T10:30:00Z,Task 1 (Kanban Board),In Progress,Done,Каріна,Налаштовано колонки та WIP-ліміт
+2026-11-21T10:45:00Z,Task 6 (Frontend Forms),Todo,In Progress,Каріна,Початок роботи над HTML-формами
