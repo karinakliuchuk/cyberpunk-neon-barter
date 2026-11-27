@@ -1,4 +1,19 @@
 time,card,prev_state,new_state,assignee,evidence
 2026-11-21T10:00:00Z,Task 1 (Kanban Board),Todo,In Progress,Каріна,Створення проєкту в GitHub Projects
 2026-11-21T10:30:00Z,Task 1 (Kanban Board),In Progress,Done,Каріна,Налаштовано колонки та WIP-ліміт
-2026-11-21T10:45:00Z,Task 6 (Frontend Forms),Todo,In Progress,Каріна,Початок роботи над HTML-формами
+2026-11-21T11:00:00Z,Task 11 (Flow Metrics),Todo,Done,Каріна,Створено початковий flow-events.csv
+2026-11-22T09:00:00Z,Task 2 (Kanban Rules),Todo,Done,Ян,Створено файл kanban.md з правилами
+2026-11-23T10:00:00Z,Task 3 (DB Migration),Todo,Done,Ян,Додано PasswordHash та згенеровано міграцію
+2026-11-24T10:00:00Z,Task 4 (Backend Auth),Todo,In Progress,Артем,Початок розробки /register та /login
+2026-11-24T16:00:00Z,Task 4 (Backend Auth),In Progress,Done,Артем,Ендпоінти реалізовано та протестовано
+2026-11-25T10:00:00Z,Task 5 (Backend Profile),Todo,Done,Артем,Додано /my та перевірено пошук циклів
+2026-11-25T11:00:00Z,Task 6 (Frontend Forms),Todo,In Progress,Каріна,Початок роботи над HTML-формами
+2026-11-26T12:00:00Z,Task 6 (Frontend Forms),In Progress,Review,Каріна,Створено PR з формами реєстрації
+2026-11-26T13:00:00Z,Task 7 (Frontend Profile),Todo,Review,Каріна,Додано профіль та пошук циклів
+2026-11-26T14:00:00Z,Task 9 (Fix Description UI),Todo,Done,Каріна,Виправлено баг з відображенням опису
+2026-11-26T15:00:00Z,Task 8 (Regression Test),Todo,Done,Ян,Написано тест на перевірку поля description
+2026-11-27T10:00:00Z,Task 12 (Docs),Todo,Done,Настя,Оновлено README та RTM
+2026-11-27T11:00:00Z,Task 10 (Release),Todo,In Progress,Артем,Вимірювання покриття коду
+2026-11-27T14:00:00Z,Task 6 (Frontend Forms),Review,Done,Артем,PR схвалено та змерджено
+2026-11-27T14:05:00Z,Task 7 (Frontend Profile),Review,Done,Артем,PR схвалено та змерджено
+2026-11-27T15:00:00Z,Task 10 (Release),In Progress,Done,Артем,Створено тег v2.1.0-rc.1
